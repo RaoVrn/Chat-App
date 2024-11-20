@@ -10,24 +10,38 @@ const io = new Server(server, { cors: { origin: "*" } }); // Initialize Socket.I
 // Use CORS middleware
 app.use(cors());
 
-// Set up a basic route
+// Initialize an array to store active users
+let activeUsers = [];
+
 app.get("/", (req, res) => {
     res.send("Chat Application Backend is Running!");
 });
 
-// Handle Socket.IO connections
+// Handle socket connections
 io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
 
-    // Listen for messages from clients
+    // Add the socket ID to the active users list
+    activeUsers.push(socket.id);
+    
+    // Emit the updated list of active users to all connected clients
+    io.emit("activeUsers", activeUsers);
+
+    // Listen for incoming messages from clients
     socket.on("message", (data) => {
-        console.log("Message received:", data);
-        io.emit("message", data); // Broadcast message to all clients
+        console.log("Message:", data);
+        io.emit("message", data); // Broadcast the message to all clients
     });
 
-    // Handle user disconnection
+    // Handle disconnection
     socket.on("disconnect", () => {
         console.log("A user disconnected:", socket.id);
+
+        // Remove the socket ID from the active users list
+        activeUsers = activeUsers.filter((user) => user !== socket.id);
+
+        // Emit the updated list of active users to all connected clients
+        io.emit("activeUsers", activeUsers);
     });
 });
 
