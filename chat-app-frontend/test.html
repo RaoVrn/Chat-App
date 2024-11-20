@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Test</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <style>
+        #messages {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 200px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+        }
+        #inputMessage {
+            width: 300px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Socket.IO Test</h1>
+
+    <!-- Display messages here -->
+    <div id="messages"></div>
+
+    <!-- Input box for sending messages -->
+    <input type="text" id="inputMessage" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+
+    <h2>Active Users:</h2>
+    <ul id="activeUsers"></ul>
+
+    <script>
+        // Connect to the backend server via Socket.IO
+        const socket = io("http://localhost:5000");  // Adjust URL if necessary
+
+        // Listen for incoming messages from the server
+        socket.on("message", (data) => {
+            const messagesDiv = document.getElementById("messages");
+            const messageElem = document.createElement("div");
+            messageElem.textContent = `${data.sender}: ${data.text}`;
+            messagesDiv.appendChild(messageElem);
+        });
+
+        // Listen for the list of active users
+        socket.on("activeUsers", (users) => {
+            const activeUsersList = document.getElementById("activeUsers");
+            activeUsersList.innerHTML = '';  // Clear the previous list
+            users.forEach((user, index) => {
+                const userElem = document.createElement("li");
+                userElem.textContent = `User ${index + 1}: ${user}`;
+                activeUsersList.appendChild(userElem);
+            });
+        });
+
+        // Function to send a message to the backend server
+        function sendMessage() {
+            const messageInput = document.getElementById("inputMessage");
+            const messageText = messageInput.value.trim();
+            if (messageText) {
+                // Emit the message to the server
+                socket.emit("message", { sender: "Test User", text: messageText });
+                messageInput.value = '';  // Clear the input field
+            }
+        }
+    </script>
+</body>
+</html>
